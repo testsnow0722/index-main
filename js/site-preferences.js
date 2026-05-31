@@ -50,7 +50,8 @@
       { value: "sample", label: "采样" }
     ]
   };
-  const preferenceGroups = ["theme", "surface", "density", "themeBackgroundPriority", "backgroundBlur", "cardBrightness", "textColor", "textBrightness", "textContrast", "textContrastMethod"];
+  const preferenceGroups = ["theme", "surface", "density", "themeBackgroundPriority", "backgroundBlur", "textColor"];
+  const advancedPreferenceGroups = ["textBrightness", "cardBrightness", "textContrast", "textContrastMethod"];
   const textColorPalette = [
     { value: "#111827", label: "墨黑" },
     { value: "#475569", label: "岩灰" },
@@ -501,6 +502,13 @@
       }
     });
 
+    root.querySelectorAll("[data-preference-reset]").forEach((button) => {
+      const group = button.dataset.preferenceGroup;
+      const isActive = preferences[group] === defaults[group];
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
     root.querySelectorAll("[data-text-color-default]").forEach((button) => {
       const isActive = preferences.textColorMode === "default";
       button.classList.toggle("is-active", isActive);
@@ -662,6 +670,7 @@
     const wrapper = document.createElement("div");
     const titleRow = document.createElement("div");
     const title = document.createElement("span");
+    const actions = document.createElement("div");
     const value = document.createElement("span");
     const input = document.createElement("input");
     const config = rangeConfigs[group];
@@ -671,8 +680,29 @@
     titleRow.className = "preference-label-row";
     title.className = "preference-label";
     title.textContent = labels[group];
+    actions.className = "preference-label-actions";
     value.className = "preference-value";
     value.dataset.preferenceValue = group;
+    actions.append(value);
+
+    if (group === "textBrightness" || group === "cardBrightness") {
+      const reset = document.createElement("button");
+
+      reset.type = "button";
+      reset.className = "preference-reset";
+      reset.dataset.preferenceGroup = group;
+      reset.dataset.preferenceReset = group;
+      reset.textContent = "0%";
+      reset.setAttribute("aria-label", `${labels[group]}恢复为 0%`);
+      reset.addEventListener("click", () => setPreference(group, defaults[group], root));
+
+      if (group === "textBrightness") {
+        reset.dataset.textColorDependent = "true";
+      }
+
+      actions.append(reset);
+    }
+
     input.type = "range";
     input.className = "preference-range";
     input.min = String(config.min);
@@ -686,9 +716,33 @@
     }
     input.addEventListener("input", () => setPreference(group, input.value, root));
 
-    titleRow.append(title, value);
+    titleRow.append(title, actions);
     wrapper.append(titleRow, input);
     return wrapper;
+  };
+
+  const createAdvancedPreferenceGroup = (root) => {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    const title = document.createElement("span");
+    const indicator = document.createElement("span");
+    const content = document.createElement("div");
+
+    details.className = "preference-advanced";
+    summary.className = "preference-advanced-summary";
+    title.className = "preference-advanced-title";
+    title.textContent = "高级设置";
+    indicator.className = "preference-advanced-indicator";
+    indicator.setAttribute("aria-hidden", "true");
+    content.className = "preference-advanced-content";
+
+    advancedPreferenceGroups.forEach((group) => {
+      content.append(createPreferenceGroup(group, root));
+    });
+
+    summary.append(title, indicator);
+    details.append(summary, content);
+    return details;
   };
 
   const createPreferenceGroup = (group, root) => {
@@ -812,6 +866,12 @@
 
     preferenceGroups.forEach((group) => {
       panel.append(createPreferenceGroup(group, panel));
+    });
+
+    const advanced = createAdvancedPreferenceGroup(panel);
+    panel.append(advanced);
+    advanced.addEventListener("toggle", () => {
+      window.requestAnimationFrame(syncPanelBackdrop);
     });
 
     toggle.addEventListener("click", () => {
