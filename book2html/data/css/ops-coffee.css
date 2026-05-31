@@ -440,7 +440,7 @@ aside#sidebar a.button {
 }
 body.site-page .nav-section-title {
   border-color: var(--card-border);
-  background: var(--card-bg);
+  background: var(--card-final-bg);
   backdrop-filter: var(--surface-blur);
   -webkit-backdrop-filter: var(--surface-blur);
 }
@@ -688,7 +688,7 @@ input::-webkit-input-placeholder {
   width: min(340px, calc(100vw - 24px));
   max-height: min(84vh, 760px);
   padding: 12px;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--liquid-edge, var(--card-border));
   border-radius: 10px;
   box-shadow: var(--card-shadow);
   overflow-y: auto;
@@ -767,6 +767,9 @@ input::-webkit-input-placeholder {
 .preference-group[data-preference-group="textContrast"] .segmented-control {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.preference-group[data-preference-group="textContrastMethod"] .segmented-control {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
 .segmented-option {
   min-height: 30px;
@@ -789,12 +792,14 @@ input::-webkit-input-placeholder {
 }
 
 .text-color-action-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
 }
 .text-color-default,
+.text-shadow-toggle,
 .text-bold-toggle {
   display: inline-flex;
   align-items: center;
@@ -810,17 +815,28 @@ input::-webkit-input-placeholder {
   font-size: 13px;
   transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
+.text-color-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
 .text-color-default.is-active,
+.text-shadow-toggle.is-active,
 .text-bold-toggle.is-active {
   color: var(--accent);
   background: var(--control-active-bg);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
+.text-shadow-toggle,
 .text-bold-toggle {
   min-width: 48px;
+}
+.text-bold-toggle {
   font-weight: 700;
 }
 .text-color-default:focus-visible,
+.text-shadow-toggle:focus-visible,
 .text-bold-toggle:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
@@ -846,13 +862,16 @@ input::-webkit-input-placeholder {
 .text-color-swatch::after {
   content: "";
   position: absolute;
-  inset: 6px;
-  border: 2px solid rgba(255, 255, 255, 0.92);
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35);
+  inset: -4px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--control-active-bg),
+    0 2px 8px rgba(15, 23, 42, 0.18);
   opacity: 0;
-  transform: scale(0.8);
+  transform: scale(0.92);
   transition: opacity 0.16s ease, transform 0.16s ease;
+  pointer-events: none;
 }
 .text-color-swatch.is-active::after {
   opacity: 1;
@@ -1054,6 +1073,40 @@ body.site-page {
   --accent: #007bff;
   --card-bg: rgba(255, 255, 255, 0.25);
   --card-bg-strong: rgba(255, 255, 255, 0.45);
+  --card-opacity-base: 100%;
+  --card-layer-base: 100%;
+  --card-layer-opacity: 1;
+  --card-opacity-color: #fff;
+  --card-strong-opacity-color: #fff;
+  --panel-opacity-color: #fff;
+  --header-opacity-color: var(--card-opacity-color);
+  --card-opacity-target: transparent;
+  --card-strong-opacity-target: transparent;
+  --panel-opacity-target: transparent;
+  --header-opacity-target: transparent;
+  --card-brightness-base: 100%;
+  --card-brightness-color: #fff;
+  --card-adjusted-bg: color-mix(in srgb, var(--card-bg) var(--card-brightness-base), var(--card-brightness-color));
+  --card-strong-adjusted-bg: color-mix(in srgb, var(--card-bg-strong) var(--card-brightness-base), var(--card-brightness-color));
+  --panel-adjusted-bg: color-mix(in srgb, var(--panel-bg, var(--card-bg)) var(--card-brightness-base), var(--card-brightness-color));
+  --header-adjusted-bg: color-mix(in srgb, var(--header-bg) var(--card-brightness-base), var(--card-brightness-color));
+  --card-opaque-bg: color-mix(in srgb, var(--card-opacity-color) var(--card-brightness-base), var(--card-brightness-color));
+  --card-strong-opaque-bg: color-mix(in srgb, var(--card-strong-opacity-color) var(--card-brightness-base), var(--card-brightness-color));
+  --panel-opaque-bg: color-mix(in srgb, var(--panel-opacity-color) var(--card-brightness-base), var(--card-brightness-color));
+  --header-opaque-bg: color-mix(in srgb, var(--header-opacity-color) var(--card-brightness-base), var(--card-brightness-color));
+  --card-stacked-bg: color-mix(in srgb, var(--card-adjusted-bg) 72%, var(--card-opaque-bg));
+  --card-strong-stacked-bg: color-mix(in srgb, var(--card-strong-adjusted-bg) 72%, var(--card-strong-opaque-bg));
+  --panel-stacked-bg: color-mix(in srgb, var(--panel-adjusted-bg) 72%, var(--panel-opaque-bg));
+  --header-stacked-bg: color-mix(in srgb, var(--header-adjusted-bg) 72%, var(--header-opaque-bg));
+  --card-layer-bg: color-mix(in srgb, var(--card-adjusted-bg) var(--card-layer-base), transparent);
+  --card-strong-layer-bg: color-mix(in srgb, var(--card-strong-adjusted-bg) var(--card-layer-base), transparent);
+  --panel-layer-bg: color-mix(in srgb, var(--panel-adjusted-bg) var(--card-layer-base), transparent);
+  --card-final-bg: color-mix(in srgb, var(--card-layer-bg) var(--card-opacity-base), var(--card-opacity-target));
+  --card-strong-final-bg: color-mix(in srgb, var(--card-strong-layer-bg) var(--card-opacity-base), var(--card-strong-opacity-target));
+  --panel-final-bg: color-mix(in srgb, var(--panel-layer-bg) var(--card-opacity-base), var(--panel-opacity-target));
+  --header-layer-bg: color-mix(in srgb, var(--header-adjusted-bg) var(--card-layer-base), transparent);
+  --header-final-bg: color-mix(in srgb, var(--header-layer-bg) var(--card-opacity-base), var(--header-opacity-target));
+  --header-border-final: color-mix(in srgb, var(--header-border) var(--card-layer-base), transparent);
   --card-border: rgba(255, 255, 255, 0.3);
   --card-shadow: 0 1px 6px 1px rgba(0, 0, 0, 0.03);
   --title-color-base: #3b2c28;
@@ -1102,6 +1155,13 @@ body.site-page > #content-wrapper {
   z-index: 1;
 }
 
+body.site-page[data-card-opacity-direction="stacked"] {
+  --card-opacity-target: var(--card-stacked-bg);
+  --card-strong-opacity-target: var(--card-strong-stacked-bg);
+  --panel-opacity-target: var(--panel-stacked-bg);
+  --header-opacity-target: var(--header-stacked-bg);
+}
+
 /* ---------- 8. 主题与质感重载 ---------- */
 /* 深色主题 */
 body.site-page[data-theme="dark"] {
@@ -1117,6 +1177,9 @@ body.site-page[data-theme="dark"] {
   --accent: #60a5fa;
   --card-bg: rgba(15, 23, 42, 0.28);
   --card-bg-strong: rgba(30, 41, 59, 0.48);
+  --card-opacity-color: #0f172a;
+  --card-strong-opacity-color: #1e293b;
+  --panel-opacity-color: #0f172a;
   --card-border: rgba(148, 163, 184, 0.24);
   --card-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
   --title-color-base: #e5e7eb;
@@ -1142,6 +1205,9 @@ body.site-page[data-surface="plain"] {
   --site-style-background-repeat: repeat, repeat, no-repeat;
   --card-bg: #fff;
   --card-bg-strong: #fff;
+  --card-opacity-color: #fff;
+  --card-strong-opacity-color: #fff;
+  --panel-opacity-color: #fff;
   --card-border: rgba(15, 23, 42, 0.1);
   --panel-bg: #fff;
   --control-bg: #f3f4f6;
@@ -1158,6 +1224,9 @@ body.site-page[data-theme="dark"][data-surface="plain"] {
   --site-style-background-repeat: repeat, repeat, no-repeat;
   --card-bg: #111827;
   --card-bg-strong: #1f2937;
+  --card-opacity-color: #111827;
+  --card-strong-opacity-color: #1f2937;
+  --panel-opacity-color: #111827;
   --card-border: rgba(148, 163, 184, 0.24);
   --panel-bg: #111827;
   --control-bg: #1f2937;
@@ -1176,6 +1245,9 @@ body.site-page[data-surface="acrylic"] {
   --header-border: rgba(255, 255, 255, 0.54);
   --card-bg: rgba(248, 250, 252, 0.58);
   --card-bg-strong: rgba(255, 255, 255, 0.76);
+  --card-opacity-color: #f8fafc;
+  --card-strong-opacity-color: #fff;
+  --panel-opacity-color: #f8fafc;
   --card-border: rgba(255, 255, 255, 0.48);
   --card-shadow: 0 16px 38px rgba(15, 23, 42, 0.1);
   --panel-bg: rgba(248, 250, 252, 0.82);
@@ -1194,6 +1266,9 @@ body.site-page[data-theme="dark"][data-surface="acrylic"] {
   --header-border: rgba(148, 163, 184, 0.26);
   --card-bg: rgba(15, 23, 42, 0.56);
   --card-bg-strong: rgba(30, 41, 59, 0.72);
+  --card-opacity-color: #0f172a;
+  --card-strong-opacity-color: #1e293b;
+  --panel-opacity-color: #0f172a;
   --card-border: rgba(148, 163, 184, 0.24);
   --card-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
   --panel-bg: rgba(15, 23, 42, 0.82);
@@ -1217,6 +1292,9 @@ body.site-page[data-surface="mica"] {
   --header-border: rgba(0, 0, 0, 0.06);
   --card-bg: rgba(247, 249, 252, 0.55);
   --card-bg-strong: rgba(252, 253, 255, 0.75);
+  --card-opacity-color: #f7f9fc;
+  --card-strong-opacity-color: #fcfdff;
+  --panel-opacity-color: #f7f9fc;
   --card-border: rgba(0, 0, 0, 0.06);
   --card-shadow: 0 25px 57px rgba(0, 0, 0, 0.12), 0 0 16px rgba(0, 0, 0, 0.08);
   --panel-bg: rgba(247, 249, 252, 0.72);
@@ -1236,6 +1314,9 @@ body.site-page[data-theme="dark"][data-surface="mica"] {
   --header-border: rgba(255, 255, 255, 0.06);
   --card-bg: rgba(35, 39, 52, 0.55);
   --card-bg-strong: rgba(44, 49, 66, 0.75);
+  --card-opacity-color: #232734;
+  --card-strong-opacity-color: #2c3142;
+  --panel-opacity-color: #232734;
   --card-border: rgba(255, 255, 255, 0.06);
   --card-shadow: 0 25px 57px rgba(0, 0, 0, 0.42), 0 0 16px rgba(0, 0, 0, 0.32);
   --panel-bg: rgba(35, 39, 52, 0.72);
@@ -1258,6 +1339,9 @@ body.site-page[data-surface="paper"] {
   --header-border: rgba(120, 100, 80, 0.16);
   --card-bg: #fbf6ec;
   --card-bg-strong: #fffaf0;
+  --card-opacity-color: #fbf6ec;
+  --card-strong-opacity-color: #fffaf0;
+  --panel-opacity-color: #fbf6ec;
   --card-border: rgba(120, 100, 80, 0.12);
   --card-shadow: 0 1px 2px rgba(120, 100, 80, 0.08), 0 6px 14px -10px rgba(120, 100, 80, 0.16);
   --title-color-base: #3a2f24;
@@ -1279,6 +1363,9 @@ body.site-page[data-theme="dark"][data-surface="paper"] {
   --header-border: rgba(220, 200, 170, 0.16);
   --card-bg: #3a3328;
   --card-bg-strong: #46402f;
+  --card-opacity-color: #3a3328;
+  --card-strong-opacity-color: #46402f;
+  --panel-opacity-color: #3a3328;
   --card-border: rgba(220, 200, 170, 0.14);
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 14px -10px rgba(0, 0, 0, 0.5);
   --title-color-base: #f0e8d4;
@@ -1306,6 +1393,9 @@ body.site-page[data-surface="obsidian"] {
   --accent: #93c5fd;
   --card-bg: rgba(18, 19, 24, 0.7);
   --card-bg-strong: rgba(28, 30, 36, 0.85);
+  --card-opacity-color: #121318;
+  --card-strong-opacity-color: #1c1e24;
+  --panel-opacity-color: #0f1014;
   --card-border: rgba(255, 255, 255, 0.08);
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 28px rgba(0, 0, 0, 0.5);
   --title-color-base: #f0f0f2;
@@ -1332,6 +1422,9 @@ body.site-page[data-surface="liquid-lite"]  {
   --header-border: rgba(255, 255, 255, 0.6);
   --card-bg: rgba(255, 255, 255, 0.18);
   --card-bg-strong: rgba(255, 255, 255, 0.32);
+  --card-opacity-color: #fff;
+  --card-strong-opacity-color: #fff;
+  --panel-opacity-color: #fff;
   --card-border: rgba(255, 255, 255, 0.6);
   --card-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
@@ -1355,6 +1448,9 @@ body.site-page[data-theme="dark"][data-surface="liquid-lite"]  {
   --header-border: rgba(226, 232, 240, 0.28);
   --card-bg: rgba(15, 23, 42, 0.32);
   --card-bg-strong: rgba(30, 41, 59, 0.5);
+  --card-opacity-color: #0f172a;
+  --card-strong-opacity-color: #1e293b;
+  --panel-opacity-color: #0f172a;
   --card-border: rgba(226, 232, 240, 0.32);
   --card-shadow:
     0 1px 0 rgba(255, 255, 255, 0.18) inset,
@@ -1379,6 +1475,9 @@ body.site-page[data-surface="liquid-lite"] {
   --surface-blur: blur(8px) saturate(160%) brightness(1.06);
   --card-bg: rgba(255, 255, 255, 0.12);
   --card-bg-strong: rgba(255, 255, 255, 0.24);
+  --card-opacity-color: #fff;
+  --card-strong-opacity-color: #fff;
+  --panel-opacity-color: #fff;
   --liquid-edge: rgba(255, 255, 255, 0.85);
 }
 body.site-page[data-theme="dark"][data-surface="liquid-lite"] {
@@ -1391,6 +1490,9 @@ body.site-page[data-theme="dark"][data-surface="liquid-lite"] {
   --surface-blur: blur(8px) saturate(150%) brightness(0.98);
   --card-bg: rgba(15, 23, 42, 0.18);
   --card-bg-strong: rgba(30, 41, 59, 0.32);
+  --card-opacity-color: #0f172a;
+  --card-strong-opacity-color: #1e293b;
+  --panel-opacity-color: #0f172a;
   --liquid-edge: rgba(255, 255, 255, 0.32);
 }
 
@@ -1406,8 +1508,8 @@ body.site-page[data-surface="liquid-lite"] .segmented-control::after {
 
 /* 头部应用主题变量 */
 body.site-page .header {
-  background: var(--header-bg);
-  border-bottom: 1px solid var(--header-border);
+  background: var(--header-final-bg);
+  border-bottom: 1px solid var(--header-border-final);
   /* Fixed backdrop-filter layers can invalidate card sampling when the pointer
      leaves the top bar in Chromium, causing a one-frame horizontal flash. */
   backdrop-filter: none;
@@ -1428,7 +1530,7 @@ body.site-page .header::before {
   background:
     linear-gradient(180deg, var(--surface-sheen), transparent 72%),
     linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
-  opacity: 0.72;
+  opacity: calc(0.72 * var(--card-layer-opacity, 1));
 }
 body.site-page .header .container {
   z-index: 1;
@@ -1441,7 +1543,7 @@ body.site-page .header .container::after {
 body.site-page[data-surface="plain"] .header {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: 0 1px 0 var(--header-border);
+  box-shadow: 0 1px 0 var(--header-border-final);
 }
 body.site-page[data-surface="plain"] .header::before {
   display: none;
@@ -1465,17 +1567,26 @@ body.site-page .nav-item,
 body.site-page .search-box,
 body.site-page .search-engine,
 body.site-page .preference-panel {
-  background: var(--card-bg);
   border-color: var(--card-border);
   backdrop-filter: var(--surface-blur);
   -webkit-backdrop-filter: var(--surface-blur);
+}
+body.site-page .nav-item {
+  background: var(--card-final-bg);
+}
+body.site-page .search-box,
+body.site-page .search-engine {
+  background: var(--panel-final-bg);
+}
+body.site-page .preference-panel {
+  background: var(--panel-bg);
 }
 body.site-page .nav-item:hover {
   box-shadow: var(--card-shadow);
 }
 body.site-page .search-box:hover,
 body.site-page .search-box:focus-within {
-  background: var(--card-bg-strong);
+  background: var(--card-strong-final-bg);
 }
 body.site-page .search-engine {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -1499,11 +1610,26 @@ body.site-page[data-surface="liquid-lite"] .preference-toggle,
 body.site-page[data-surface="liquid-lite"] .segmented-control  {
   isolation: isolate;
   overflow: hidden;
-  background: var(--card-bg);
   border: 1px solid var(--liquid-edge);
   box-shadow: var(--card-shadow);
   backdrop-filter: var(--surface-blur);
   -webkit-backdrop-filter: var(--surface-blur);
+}
+body.site-page[data-surface="liquid"] .nav-item,
+body.site-page[data-surface="liquid"] .nav-section-title,
+body.site-page[data-surface="liquid-lite"] .nav-item,
+body.site-page[data-surface="liquid-lite"] .nav-section-title {
+  background: var(--card-final-bg);
+}
+body.site-page[data-surface="liquid"] .search-engine,
+body.site-page[data-surface="liquid"] .search-box,
+body.site-page[data-surface="liquid-lite"] .search-engine,
+body.site-page[data-surface="liquid-lite"] .search-box {
+  background: var(--panel-final-bg);
+}
+body.site-page[data-surface="liquid"] .preference-panel,
+body.site-page[data-surface="liquid-lite"] .preference-panel {
+  background: var(--panel-bg);
 }
 
 body.site-page[data-surface="liquid"] .preference-panel,
@@ -1600,18 +1726,18 @@ body.site-page[data-surface="liquid-lite"] .search-box .search-btn  {
  * inline backdrop-filter 由 JS 给每个元素单独写。
  */
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .nav-item,
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .nav-section-title,
+html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .nav-section-title {
+  background: color-mix(in srgb, var(--card-final-bg) 55%, transparent);
+}
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .search-box,
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .search-engine,
+html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .search-engine {
+  background: color-mix(in srgb, var(--panel-final-bg) 55%, transparent);
+}
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .preference-panel,
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .preference-toggle,
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .segmented-control {
   background: rgba(255, 255, 255, 0.08);
 }
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .nav-item,
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .nav-section-title,
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .search-box,
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .search-engine,
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .preference-panel,
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .preference-toggle,
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .segmented-control {
@@ -1628,15 +1754,12 @@ html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .
 /* 关键修复：液态玻璃 + 支持折射时，去掉 .header 自己的 backdrop-filter，
    防止它给子节点 .preference-panel 形成嵌套合成层（嵌套合成层会让子元素的
    backdrop-filter 采样到 header 内部即空白，而不是真正的页面背景）。
-   作为补偿：浅色用淡白色块、深色用淡黑色块，比纯透明多一点存在感。
+   作为补偿：保留主题变量给出的半透明顶栏底色。
    注意：JS 也排除 .header，不再给它写 inline backdrop-filter。 */
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .header {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: rgba(255, 255, 255, 0.32) !important;
-}
-html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][data-theme="dark"] .header {
-  background: rgba(15, 23, 42, 0.42) !important;
+  background: var(--header-final-bg) !important;
 }
 
 /* header::before 在液态玻璃下不需要——真折射模式 header 没 backdrop-filter，
@@ -1893,6 +2016,9 @@ body.site-page[data-surface="neon"] {
   --accent: #05d9e8;
   --card-bg: rgba(8, 4, 20, 0.78);
   --card-bg-strong: rgba(20, 8, 36, 0.88);
+  --card-opacity-color: #080414;
+  --card-strong-opacity-color: #140824;
+  --panel-opacity-color: #080414;
   --card-border: #ff2a6d;
   --card-shadow:
     0 0 0 1px #ff2a6d,
@@ -1938,6 +2064,9 @@ body.site-page[data-surface="pixel"] {
   --accent: #fcd34d;
   --card-bg: #1a2030;
   --card-bg-strong: #252d40;
+  --card-opacity-color: #1a2030;
+  --card-strong-opacity-color: #252d40;
+  --panel-opacity-color: #1a2030;
   --card-border: transparent;
   --card-shadow:
     0 -4px 0 0 #fcd34d,
@@ -2100,23 +2229,68 @@ body.site-page[data-theme-background-priority="simple"][data-surface="pixel"] {
   --site-style-background-repeat: no-repeat, repeat, repeat, no-repeat;
 }
 
-/* 卡片明暗度：只混合卡片底色，不用 filter，避免连文字和图标一起变色。 */
-body.site-page[data-card-brightness="custom"] .nav-item,
-body.site-page[data-card-brightness="custom"] .nav-section-title,
-body.site-page[data-card-brightness="custom"] .bookmark-empty {
-  background: color-mix(in srgb, var(--card-bg) var(--card-brightness-base), var(--card-brightness-color)) !important;
+/* 通用渲染器：常规质感用伪层接管卡片底，不改变文字和图标。 */
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-item,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-section-title,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-empty,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .search-engine,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-info-panel {
+  position: relative;
+  isolation: isolate;
 }
-body.site-page[data-card-brightness="custom"] .search-box,
-body.site-page[data-card-brightness="custom"] .search-engine,
-body.site-page[data-card-brightness="custom"] .preference-panel,
-body.site-page[data-card-brightness="custom"] .bookmark-info-panel {
-  background: color-mix(in srgb, var(--panel-bg, var(--card-bg)) var(--card-brightness-base), var(--card-brightness-color)) !important;
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-item > *,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-empty > *,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .search-engine > *,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-info-panel > * {
+  position: relative;
+  z-index: 1;
 }
-body.site-page[data-card-brightness="custom"] .search-box:hover,
-body.site-page[data-card-brightness="custom"] .search-box:focus-within {
-  background: color-mix(in srgb, var(--card-bg-strong) var(--card-brightness-base), var(--card-brightness-color)) !important;
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-item,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-section-title,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-empty,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .search-engine,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-info-panel {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
-
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-item::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-section-title::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-empty::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .search-engine::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-info-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid var(--card-border);
+  border-radius: inherit;
+  background: var(--card-final-bg);
+  backdrop-filter: var(--surface-blur);
+  -webkit-backdrop-filter: var(--surface-blur);
+}
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-section-title,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-empty {
+  z-index: 0;
+}
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-section-title::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-empty::before {
+  z-index: -1;
+}
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .search-engine::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .bookmark-info-panel::before {
+  background: var(--panel-final-bg);
+}
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .search-engine::before {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-item:hover::before,
+body.site-page[data-card-renderer="generic"][data-card-opacity="custom"] .nav-section-title:hover::before {
+  box-shadow: var(--card-shadow);
+}
 /* 跟随配色下的文字明暗度：混合当前主题文字变量，不切到自定义色。 */
 body.site-page[data-text-contrast="off"][data-text-color-mode="default"][data-text-brightness="custom"] {
   --header-text: color-mix(in srgb, var(--header-text-base) var(--text-brightness-base, 100%), var(--text-brightness-color, #fff));
@@ -2151,37 +2325,7 @@ body.site-page[data-text-contrast="off"][data-text-color-mode="custom"] .text-co
   color: var(--custom-text-control);
 }
 
-/* 文字反色：范围决定影响文字，方式决定用 CSS 差值混合还是采样后切换黑白。 */
-body.site-page[data-text-contrast="primary"] .nav-item,
-body.site-page[data-text-contrast="primary"] .nav-section-title,
-body.site-page[data-text-contrast="full"] .nav-item,
-body.site-page[data-text-contrast="full"] .nav-section-title,
-body.site-page[data-text-contrast="full"] .search-box,
-body.site-page[data-text-contrast="full"] .search-engine,
-body.site-page[data-text-contrast="full"] .preference-panel,
-body.site-page[data-text-contrast="full"] .preference-toggle,
-body.site-page[data-text-contrast="full"] .segmented-control {
-  isolation: isolate;
-}
-
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="primary"] .nav-name,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="primary"] .nav-section-title,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .nav-name,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .nav-section-title,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .nav-item p,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .search-input,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .search-input::placeholder,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .search-engine-option,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .header-menu a,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .preference-toggle,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .preference-label,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .preference-advanced-summary,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .preference-reset,
-body.site-page[data-text-contrast-method="blend"][data-text-contrast="full"] .segmented-option {
-  color: #fff !important;
-  mix-blend-mode: difference;
-}
-
+/* 文字反色：标准使用整页采样，增强使用文字附近的局部采样。 */
 body.site-page[data-text-contrast-method="sample"][data-text-contrast-tone="dark"] {
   --sample-title-color: #f8fafc;
   --sample-muted-color: #dbe7f4;
@@ -2204,13 +2348,44 @@ body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .s
   color: var(--sample-muted-color) !important;
 }
 body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .search-engine-option,
-body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .header-menu a,
-body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .preference-toggle,
-body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .preference-label,
-body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .preference-advanced-summary,
-body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .preference-reset,
-body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .segmented-option {
+body.site-page[data-text-contrast-method="sample"][data-text-contrast="full"] .header-menu a {
   color: var(--sample-control-color) !important;
+}
+
+body.site-page[data-text-contrast-method="enhance"] [data-text-tone="dark"] {
+  --local-title-color: #f8fafc;
+  --local-muted-color: #dbe7f4;
+  --local-control-color: #f8fafc;
+  --local-contrast-overlay: rgba(0, 0, 0, 0.14);
+}
+body.site-page[data-text-contrast-method="enhance"] [data-text-tone="light"] {
+  --local-title-color: #111827;
+  --local-muted-color: #334155;
+  --local-control-color: #111827;
+  --local-contrast-overlay: rgba(255, 255, 255, 0.2);
+}
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="primary"] .nav-item[data-text-tone] .nav-name,
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="primary"] .nav-section-title[data-text-tone],
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .nav-item[data-text-tone] .nav-name,
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .nav-section-title[data-text-tone] {
+  color: var(--local-title-color) !important;
+}
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .nav-item[data-text-tone] p,
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .search-box[data-text-tone] .search-input,
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .search-box[data-text-tone] .search-input::placeholder {
+  color: var(--local-muted-color) !important;
+}
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .search-engine[data-text-tone] .search-engine-option,
+body.site-page[data-text-contrast-method="enhance"][data-text-contrast="full"] .header-menu a[data-text-tone] {
+  color: var(--local-control-color) !important;
+}
+body.site-page:not([data-card-opacity-level="transparent"])[data-text-contrast-method="enhance"][data-text-contrast="primary"] .nav-item[data-text-tone],
+body.site-page:not([data-card-opacity-level="transparent"])[data-text-contrast-method="enhance"][data-text-contrast="primary"] .nav-section-title[data-text-tone],
+body.site-page:not([data-card-opacity-level="transparent"])[data-text-contrast-method="enhance"][data-text-contrast="full"] .nav-item[data-text-tone],
+body.site-page:not([data-card-opacity-level="transparent"])[data-text-contrast-method="enhance"][data-text-contrast="full"] .nav-section-title[data-text-tone],
+body.site-page:not([data-card-opacity-level="transparent"])[data-text-contrast-method="enhance"][data-text-contrast="full"] .search-box[data-text-tone],
+body.site-page:not([data-card-opacity-level="transparent"])[data-text-contrast-method="enhance"][data-text-contrast="full"] .search-engine[data-text-tone] {
+  background-image: linear-gradient(var(--local-contrast-overlay), var(--local-contrast-overlay)) !important;
 }
 
 body.site-page[data-text-contrast="full"] .nav-name,
@@ -2219,6 +2394,52 @@ body.site-page[data-text-contrast="full"] .nav-item p,
 body.site-page[data-text-contrast="full"] .search-input,
 body.site-page[data-text-contrast="full"] .header-menu a {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+body.site-page[data-text-shadow="on"] {
+  --text-shadow-normal:
+    0 2px 2px rgba(15, 23, 42, 0.3),
+    0 6px 14px rgba(15, 23, 42, 0.16);
+}
+body.site-page[data-theme="dark"][data-text-shadow="on"] {
+  --text-shadow-normal:
+    0 2px 2px rgba(0, 0, 0, 0.62),
+    0 6px 14px rgba(0, 0, 0, 0.36);
+}
+body.site-page[data-text-shadow="on"] .header .site,
+body.site-page[data-text-shadow="on"] .header-menu a,
+body.site-page[data-text-shadow="on"] .nav-name,
+body.site-page[data-text-shadow="on"] .nav-section-title,
+body.site-page[data-text-shadow="on"] .nav-item p,
+body.site-page[data-text-shadow="on"] .bookmark-empty,
+body.site-page[data-text-shadow="on"] .bookmark-info-panel p,
+body.site-page[data-text-shadow="on"] .search-input,
+body.site-page[data-text-shadow="on"] .search-input::placeholder,
+body.site-page[data-text-shadow="on"] .search-engine-option {
+  text-shadow: var(--text-shadow-normal);
+}
+
+body.site-page[data-text-shadow="enhance"] {
+  --text-shadow-enhance:
+    0 2px 4px rgba(15, 23, 42, 0.24),
+    0 0 12px rgba(255, 255, 255, 0.18);
+}
+body.site-page[data-theme="dark"][data-text-shadow="enhance"] {
+  --text-shadow-enhance:
+    0 2px 4px rgba(0, 0, 0, 0.46),
+    0 0 14px rgba(148, 163, 184, 0.16);
+}
+body.site-page[data-text-shadow="enhance"] .header .site,
+body.site-page[data-text-shadow="enhance"] .header-menu a,
+body.site-page[data-text-shadow="enhance"] .nav-name,
+body.site-page[data-text-shadow="enhance"] .nav-section-title,
+body.site-page[data-text-shadow="enhance"] .nav-item p,
+body.site-page[data-text-shadow="enhance"] .bookmark-empty,
+body.site-page[data-text-shadow="enhance"] .bookmark-info-panel p,
+body.site-page[data-text-shadow="enhance"] .search-input,
+body.site-page[data-text-shadow="enhance"] .search-input::placeholder,
+body.site-page[data-text-shadow="enhance"] .search-engine-option {
+  text-shadow: var(--text-shadow-enhance, var(--text-shadow-normal, 0 1px 1px rgba(15, 23, 42, 0.18)));
 }
 
 body.site-page[data-text-bold="on"] .header .site,

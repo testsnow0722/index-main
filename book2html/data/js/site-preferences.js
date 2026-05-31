@@ -7,11 +7,13 @@
     themeBackgroundPriority: "off",
     backgroundBlur: 0,
     cardBrightness: 0,
+    cardOpacity: 0,
     textContrast: "off",
-    textContrastMethod: "blend",
+    textContrastMethod: "sample",
     textColorMode: "default",
     textColor: "#2563eb",
     textBrightness: 0,
+    textShadow: "off",
     textBold: "off"
   };
 
@@ -47,12 +49,13 @@
       { value: "full", label: "全部" }
     ],
     textContrastMethod: [
-      { value: "blend", label: "CSS" },
-      { value: "sample", label: "采样" }
+      { value: "sample", label: "标准" },
+      { value: "enhance", label: "增强" }
     ]
   };
   const preferenceGroups = ["theme", "surface", "density", "themeBackgroundPriority", "backgroundBlur", "textColor"];
-  const advancedPreferenceGroups = ["textBrightness", "cardBrightness", "textContrast", "textContrastMethod"];
+  const advancedPreferenceGroups = ["textBrightness", "cardBrightness", "cardOpacity", "textContrast", "textContrastMethod"];
+  const nativeCardRendererSurfaces = new Set(["acrylic", "obsidian", "liquid", "liquid-lite", "pixel", "neon"]);
   const textColorPalette = [
     { value: "#111827", label: "墨黑" },
     { value: "#475569", label: "岩灰" },
@@ -69,6 +72,7 @@
   ];
   const backgroundBlurRange = { min: 0, max: 16, step: 0.1 };
   const brightnessRange = { min: -100, max: 100, step: 1 };
+  const opacityRange = { min: -100, max: 100, step: 1 };
   const rangeConfigs = {
     backgroundBlur: {
       ...backgroundBlurRange,
@@ -81,6 +85,12 @@
       format: (value) => `${normalizeCardBrightness(value)}`,
       output: (value) => formatSignedPercent(normalizeCardBrightness(value)),
       normalize: (value) => normalizeCardBrightness(value)
+    },
+    cardOpacity: {
+      ...opacityRange,
+      format: (value) => `${normalizeCardOpacity(value)}`,
+      output: (value) => formatSignedPercent(normalizeCardOpacity(value)),
+      normalize: (value) => normalizeCardOpacity(value)
     },
     textBrightness: {
       ...brightnessRange,
@@ -97,6 +107,7 @@
     themeBackgroundPriority: "主题背景优先",
     backgroundBlur: "背景模糊",
     cardBrightness: "卡片明暗度",
+    cardOpacity: "卡片透明度",
     textColor: "文字主题色",
     textBrightness: "文字明暗度",
     textContrast: "文字反色",
@@ -145,6 +156,17 @@
   const formatSignedPercent = (value) => `${value > 0 ? "+" : ""}${value}%`;
 
   const normalizeCardBrightness = (value) => normalizeBrightness(value, defaults.cardBrightness);
+
+  const normalizeCardOpacity = (value) => {
+    const parsed = Number.parseFloat(value);
+
+    if (!Number.isFinite(parsed)) {
+      return defaults.cardOpacity;
+    }
+
+    const stepped = Math.round(parsed / opacityRange.step) * opacityRange.step;
+    return Math.min(opacityRange.max, Math.max(opacityRange.min, stepped));
+  };
 
   const normalizeTextBrightness = (value) => {
     return normalizeBrightness(value, defaults.textBrightness);
@@ -210,6 +232,10 @@
       return normalizeCardBrightness(value);
     }
 
+    if (group === "cardOpacity") {
+      return normalizeCardOpacity(value);
+    }
+
     if (group === "textContrast" && value === "level1") {
       return "primary";
     }
@@ -232,11 +258,13 @@
         themeBackgroundPriority: getOptionValue("themeBackgroundPriority", saved.themeBackgroundPriority, defaults.themeBackgroundPriority),
         backgroundBlur: getOptionValue("backgroundBlur", saved.backgroundBlur, defaults.backgroundBlur),
         cardBrightness: getOptionValue("cardBrightness", saved.cardBrightness, defaults.cardBrightness),
+        cardOpacity: getOptionValue("cardOpacity", saved.cardOpacity, defaults.cardOpacity),
         textContrast: getOptionValue("textContrast", saved.textContrast, defaults.textContrast),
         textContrastMethod: getOptionValue("textContrastMethod", saved.textContrastMethod, defaults.textContrastMethod),
         textColorMode: saved.textColorMode === "custom" ? "custom" : defaults.textColorMode,
         textColor: normalizeTextColor(saved.textColor),
         textBrightness: normalizeTextBrightness(saved.textBrightness),
+        textShadow: ["off", "on", "enhance"].includes(saved.textShadow) ? saved.textShadow : defaults.textShadow,
         textBold: saved.textBold === "on" ? "on" : defaults.textBold
       };
     } catch {
@@ -255,6 +283,15 @@
   let preferences = readPreferences();
   let textContrastRequest = 0;
   let textContrastFrame = 0;
+  let textContrastSamplerCache = { key: "", promise: null };
+  let colorResolverElement = null;
+  const localTextContrastSelector = [
+    ".nav-item[data-text-tone]",
+    ".nav-section-title[data-text-tone]",
+    ".search-box[data-text-tone]",
+    ".search-engine[data-text-tone]",
+    ".header-menu a[data-text-tone]"
+  ].join(", ");
 
   const getFallbackBackgroundColor = (styles) => {
     const surface = document.body.dataset.surface;
@@ -272,6 +309,11 @@
 
   const parseColor = (value) => {
     const color = String(value || "").trim();
+
+    if (color === "transparent") {
+      return { r: 0, g: 0, b: 0, a: 0 };
+    }
+
     const hex = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
 
     if (hex) {
@@ -287,18 +329,105 @@
 
     const rgb = color.match(/^rgba?\(([^)]+)\)$/i);
 
-    if (!rgb) {
+    if (rgb) {
+      const content = rgb[1].trim();
+      let parts;
+      let alpha;
+      const toRgbChannel = (part) => {
+        const value = Number.parseFloat(part);
+        return part.endsWith("%") ? value * 2.55 : value;
+      };
+      const toAlpha = (part) => {
+        const value = Number.parseFloat(part);
+        return part.endsWith("%") ? value / 100 : value;
+      };
+
+      if (content.includes(",")) {
+        parts = content.split(",").map((part) => part.trim());
+        alpha = parts[3];
+      } else {
+        const split = content.split("/");
+        parts = split[0].trim().split(/\s+/);
+        alpha = split[1];
+      }
+
+      return {
+        r: toRgbChannel(parts[0]),
+        g: toRgbChannel(parts[1]),
+        b: toRgbChannel(parts[2]),
+        a: alpha === undefined ? 1 : toAlpha(alpha.trim())
+      };
+    }
+
+    const srgb = color.match(/^color\(\s*srgb\s+(.+)\)$/i);
+
+    if (!srgb) {
       return null;
     }
 
-    const parts = rgb[1].split(",").map((part) => part.trim());
+    const split = srgb[1].split("/");
+    const channels = split[0].trim().split(/\s+/);
+    const toChannel = (part) => {
+      const value = Number.parseFloat(part);
+      return part.endsWith("%") ? value * 2.55 : value * 255;
+    };
+    const toAlpha = (part) => {
+      const value = Number.parseFloat(part);
+      return part.trim().endsWith("%") ? value / 100 : value;
+    };
 
     return {
-      r: Number.parseFloat(parts[0]),
-      g: Number.parseFloat(parts[1]),
-      b: Number.parseFloat(parts[2]),
-      a: parts[3] === undefined ? 1 : Number.parseFloat(parts[3])
+      r: toChannel(channels[0]),
+      g: toChannel(channels[1]),
+      b: toChannel(channels[2]),
+      a: split[1] === undefined ? 1 : toAlpha(split[1])
     };
+  };
+
+  const getColorResolverElement = () => {
+    if (colorResolverElement && colorResolverElement.isConnected) {
+      return colorResolverElement;
+    }
+
+    colorResolverElement = document.createElement("span");
+    colorResolverElement.setAttribute("aria-hidden", "true");
+    colorResolverElement.style.position = "fixed";
+    colorResolverElement.style.left = "-1px";
+    colorResolverElement.style.top = "-1px";
+    colorResolverElement.style.width = "0";
+    colorResolverElement.style.height = "0";
+    colorResolverElement.style.overflow = "hidden";
+    colorResolverElement.style.pointerEvents = "none";
+    document.body.append(colorResolverElement);
+    return colorResolverElement;
+  };
+
+  const resolveColorValue = (value) => {
+    const parsed = parseColor(value);
+
+    if (parsed) {
+      return parsed;
+    }
+
+    if (!document.body) {
+      return null;
+    }
+
+    const resolver = getColorResolverElement();
+    resolver.style.backgroundColor = "";
+    resolver.style.backgroundColor = value;
+    return parseColor(getComputedStyle(resolver).backgroundColor);
+  };
+
+  const resolveVariableColor = (name) => resolveColorValue(`var(${name})`);
+
+  const withAlpha = (color, opacity) => {
+    if (!color) {
+      return null;
+    }
+
+    const alpha = Number.isFinite(opacity) ? opacity : 1;
+    return { ...color, a: color.a * Math.min(1, Math.max(0, alpha)) };
   };
 
   const blendColor = (foreground, background) => {
@@ -391,39 +520,317 @@
     image.src = url;
   });
 
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const clearLocalTextContrastTones = () => {
+    document.querySelectorAll(localTextContrastSelector).forEach((element) => {
+      delete element.dataset.textTone;
+    });
+  };
+
+  const createImageSampler = (url, styles) => new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => {
+      try {
+        const viewportWidth = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+        const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+        const viewportScale = Math.min(1, 520 / viewportWidth, 320 / viewportHeight);
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+
+        if (!context) {
+          reject(new Error("Canvas is unavailable"));
+          return;
+        }
+
+        canvas.width = Math.max(1, Math.round(viewportWidth * viewportScale));
+        canvas.height = Math.max(1, Math.round(viewportHeight * viewportScale));
+
+        const naturalWidth = image.naturalWidth || image.width;
+        const naturalHeight = image.naturalHeight || image.height;
+        const backgroundScale = Number.parseFloat(styles.getPropertyValue("--site-background-scale")) || 1;
+        const coverScale = Math.max(canvas.width / naturalWidth, canvas.height / naturalHeight) * backgroundScale;
+        const width = naturalWidth * coverScale;
+        const height = naturalHeight * coverScale;
+        const left = (canvas.width - width) / 2;
+        const top = (canvas.height - height) / 2;
+
+        context.drawImage(image, left, top, width, height);
+
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const sampleRect = (rect) => {
+          const centerX = (rect.left + rect.width / 2) * viewportScale;
+          const centerY = (rect.top + rect.height / 2) * viewportScale;
+          const sampleWidth = clamp(rect.width * viewportScale, 8, Math.min(96, canvas.width));
+          const sampleHeight = clamp(rect.height * viewportScale, 8, Math.min(72, canvas.height));
+          const startX = Math.floor(clamp(centerX - sampleWidth / 2, 0, canvas.width - 1));
+          const endX = Math.ceil(clamp(centerX + sampleWidth / 2, startX + 1, canvas.width));
+          const startY = Math.floor(clamp(centerY - sampleHeight / 2, 0, canvas.height - 1));
+          const endY = Math.ceil(clamp(centerY + sampleHeight / 2, startY + 1, canvas.height));
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          let count = 0;
+
+          for (let y = startY; y < endY; y += 1) {
+            for (let x = startX; x < endX; x += 1) {
+              const index = (y * canvas.width + x) * 4;
+              const alpha = pixels[index + 3] / 255;
+
+              if (alpha <= 0.02) {
+                continue;
+              }
+
+              r += pixels[index] * alpha;
+              g += pixels[index + 1] * alpha;
+              b += pixels[index + 2] * alpha;
+              count += alpha;
+            }
+          }
+
+          return count ? { r: r / count, g: g / count, b: b / count, a: 1 } : null;
+        };
+
+        resolve({ sampleRect });
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    image.onerror = reject;
+    image.src = url;
+  });
+
+  const getImageSampler = (url, styles) => {
+    const backgroundScale = styles.getPropertyValue("--site-background-scale").trim();
+    const key = `${url}|${window.innerWidth}x${window.innerHeight}|${backgroundScale}`;
+
+    if (textContrastSamplerCache.key === key && textContrastSamplerCache.promise) {
+      return textContrastSamplerCache.promise;
+    }
+
+    textContrastSamplerCache = {
+      key,
+      promise: createImageSampler(url, styles)
+    };
+
+    return textContrastSamplerCache.promise;
+  };
+
+  const getVisibleRect = (element) => {
+    if (!element) {
+      return null;
+    }
+
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 ? rect : null;
+  };
+
+  const getSampleRect = (entry) => {
+    const sampleRect = getVisibleRect(entry.sampleElement);
+    const elementRect = getVisibleRect(entry.element);
+    const rect = sampleRect || elementRect;
+
+    if (!rect) {
+      return null;
+    }
+
+    const width = clamp(rect.width * (entry.widthRatio || 0.86), 16, entry.maxWidth || 140);
+    const height = clamp(rect.height * (entry.heightRatio || 1.2), 10, entry.maxHeight || 70);
+    const centerX = rect.left + rect.width / 2;
+    const centerY = sampleRect || !entry.fallbackY ? rect.top + rect.height / 2 : elementRect.top + elementRect.height * entry.fallbackY;
+
+    return {
+      left: centerX - width / 2,
+      top: centerY - height / 2,
+      width,
+      height
+    };
+  };
+
+  const getSurfaceFallbackColor = (kind) => {
+    if (kind === "header") {
+      return resolveVariableColor("--header-final-bg") || resolveVariableColor("--header-bg");
+    }
+
+    if (kind === "panel") {
+      return resolveVariableColor("--panel-final-bg") || resolveVariableColor("--panel-bg");
+    }
+
+    return resolveVariableColor("--card-final-bg") || resolveVariableColor("--card-bg");
+  };
+
+  const getPseudoSurfaceColor = (element) => {
+    try {
+      const styles = getComputedStyle(element, "::before");
+      const content = styles.content;
+
+      if (!content || content === "none") {
+        return null;
+      }
+
+      const color = parseColor(styles.backgroundColor);
+
+      if (!color || color.a <= 0.02) {
+        return null;
+      }
+
+      return withAlpha(color, Number.parseFloat(styles.opacity));
+    } catch {
+      return null;
+    }
+  };
+
+  const getElementSurfaceColor = (element, kind = "card") => {
+    const pseudoColor = element ? getPseudoSurfaceColor(element) : null;
+
+    if (pseudoColor && pseudoColor.a > 0.02) {
+      return pseudoColor;
+    }
+
+    const color = element ? parseColor(getComputedStyle(element).backgroundColor) : null;
+
+    if (color && color.a > 0.02) {
+      return color;
+    }
+
+    return getSurfaceFallbackColor(kind) || { r: 255, g: 255, b: 255, a: 0 };
+  };
+
+  const getLocalTextContrastEntries = () => {
+    const entries = [];
+    const add = (element, sampleElement, surfaceElement, options = {}) => {
+      entries.push({
+        element,
+        sampleElement: sampleElement || element,
+        surfaceElement: surfaceElement || element,
+        surfaceKind: options.surfaceKind || "card",
+        ...options
+      });
+    };
+
+    document.querySelectorAll(".nav-item").forEach((element) => {
+      add(element, element.querySelector(".nav-name"), element, {
+        fallbackY: 0.38,
+        heightRatio: 1.35,
+        maxWidth: 120,
+        maxHeight: 56
+      });
+    });
+
+    document.querySelectorAll(".nav-section-title").forEach((element) => {
+      add(element, element, element, {
+        heightRatio: 1.1,
+        maxHeight: 52
+      });
+    });
+
+    document.querySelectorAll(".search-box").forEach((element) => {
+      add(element, element.querySelector(".search-input"), element, {
+        surfaceKind: "panel",
+        widthRatio: 0.7,
+        heightRatio: 0.8,
+        maxWidth: 220,
+        maxHeight: 52
+      });
+    });
+
+    document.querySelectorAll(".search-engine:not([hidden])").forEach((element) => {
+      add(element, element.querySelector(".search-engine-option") || element, element, {
+        surfaceKind: "panel",
+        widthRatio: 0.72,
+        heightRatio: 1.2,
+        maxWidth: 180,
+        maxHeight: 58
+      });
+    });
+
+    document.querySelectorAll(".header-menu a").forEach((element) => {
+      add(element, element, element.closest(".header") || element, {
+        surfaceKind: "header",
+        heightRatio: 1.15,
+        maxWidth: 100,
+        maxHeight: 48
+      });
+    });
+
+    return entries;
+  };
+
+  const setLocalTextContrastTones = (backgroundColor, styles, sampler) => {
+    clearLocalTextContrastTones();
+
+    getLocalTextContrastEntries().forEach((entry) => {
+      const rect = getSampleRect(entry);
+
+      if (!rect) {
+        return;
+      }
+
+      const sampledColor = sampler ? sampler.sampleRect(rect) || backgroundColor : backgroundColor;
+      const surfaceColor = getElementSurfaceColor(entry.surfaceElement, entry.surfaceKind);
+      const finalColor = blendColor(surfaceColor, sampledColor);
+      entry.element.dataset.textTone = getLuminance(finalColor) < 0.52 ? "dark" : "light";
+    });
+  };
+
   const setTextContrastTone = (backgroundColor) => {
-    const styles = getComputedStyle(document.body);
-    const cardColor = parseColor(styles.getPropertyValue("--card-bg"));
+    const cardColor = getElementSurfaceColor(document.querySelector(".nav-item") || document.querySelector(".nav-section-title"), "card");
     const finalColor = blendColor(cardColor, backgroundColor);
     document.body.dataset.textContrastTone = getLuminance(finalColor) < 0.52 ? "dark" : "light";
   };
 
   const updateTextContrastTone = () => {
     const request = ++textContrastRequest;
+    const isSampleContrast = preferences.textContrast !== "off" && preferences.textContrastMethod === "sample";
+    const isEnhancedContrast = preferences.textContrast !== "off" && preferences.textContrastMethod === "enhance";
 
-    if (preferences.textContrast === "off" || preferences.textContrastMethod !== "sample") {
+    if (!isSampleContrast && !isEnhancedContrast) {
       delete document.body.dataset.textContrastTone;
+      clearLocalTextContrastTones();
       return;
     }
 
     const styles = getComputedStyle(document.body);
     const backgroundUrl = extractBackgroundImageUrl(styles.getPropertyValue("--site-background-image"));
+    const fallbackColor = getFallbackBackgroundColor(styles);
     const useColor = (color) => {
       if (request !== textContrastRequest) {
         return;
       }
 
-      setTextContrastTone(color);
+      if (isEnhancedContrast) {
+        delete document.body.dataset.textContrastTone;
+        setLocalTextContrastTones(color, styles);
+      } else {
+        clearLocalTextContrastTones();
+        setTextContrastTone(color);
+      }
     };
 
     if (!backgroundUrl) {
-      useColor(getFallbackBackgroundColor(styles));
+      useColor(fallbackColor);
+      return;
+    }
+
+    if (isEnhancedContrast) {
+      getImageSampler(backgroundUrl, styles)
+        .then((sampler) => {
+          if (request !== textContrastRequest) {
+            return;
+          }
+
+          delete document.body.dataset.textContrastTone;
+          setLocalTextContrastTones(fallbackColor, styles, sampler);
+        })
+        .catch(() => useColor(fallbackColor));
       return;
     }
 
     sampleImageColor(backgroundUrl)
       .then(useColor)
-      .catch(() => useColor(getFallbackBackgroundColor(styles)));
+      .catch(() => useColor(fallbackColor));
   };
 
   const scheduleTextContrastTone = () => {
@@ -441,6 +848,9 @@
     const useCustomTextColor = preferences.textColorMode === "custom" && preferences.textContrast === "off";
     const cardBrightness = normalizeCardBrightness(preferences.cardBrightness);
     const cardBrightnessAmount = Math.abs(cardBrightness);
+    const cardOpacity = normalizeCardOpacity(preferences.cardOpacity);
+    const cardOpacityFill = Math.max(0, cardOpacity);
+    const cardLayerOpacity = cardOpacity < 0 ? Math.max(0, (100 + cardOpacity) / 100) : 1;
     const textBrightness = normalizeTextBrightness(preferences.textBrightness);
     const textBrightnessAmount = Math.abs(textBrightness);
     const useTextBrightness = preferences.textContrast === "off" && textBrightness !== 0;
@@ -451,16 +861,24 @@
     document.body.dataset.themeBackgroundPriority = preferences.themeBackgroundPriority;
     document.body.dataset.backgroundBlur = preferences.backgroundBlur > 0 ? "custom" : "off";
     document.body.dataset.cardBrightness = "custom";
+    document.body.dataset.cardOpacity = "custom";
+    document.body.dataset.cardRenderer = nativeCardRendererSurfaces.has(preferences.surface) ? "native" : "generic";
+    document.body.dataset.cardOpacityDirection = cardOpacity > 0 ? "stacked" : cardOpacity < 0 ? "transparent" : "off";
+    document.body.dataset.cardOpacityLevel = cardOpacity <= -100 ? "transparent" : cardOpacity === 0 ? "off" : "custom";
     document.body.dataset.textContrast = preferences.textContrast;
     document.body.dataset.textContrastMethod = preferences.textContrastMethod;
     document.body.dataset.textColorMode = preferences.textColorMode;
     document.body.dataset.textBrightness = useTextBrightness ? "custom" : "off";
+    document.body.dataset.textShadow = preferences.textShadow;
     document.body.dataset.textBold = preferences.textBold;
     document.body.style.setProperty("--site-background-blur", `${formatBackgroundBlur(preferences.backgroundBlur)}px`);
     document.body.style.setProperty("--site-background-scale", String(1 + Math.min(preferences.backgroundBlur * 0.0045, 0.08)));
 
     document.body.style.setProperty("--card-brightness-base", `${100 - cardBrightnessAmount}%`);
     document.body.style.setProperty("--card-brightness-color", cardBrightness >= 0 ? "#fff" : "#000");
+    document.body.style.setProperty("--card-opacity-base", `${100 - cardOpacityFill}%`);
+    document.body.style.setProperty("--card-layer-base", `${cardLayerOpacity * 100}%`);
+    document.body.style.setProperty("--card-layer-opacity", String(Number(cardLayerOpacity.toFixed(3))));
 
     if (useTextBrightness) {
       document.body.style.setProperty("--text-brightness-base", `${100 - textBrightnessAmount}%`);
@@ -474,6 +892,15 @@
       document.body.style.setProperty("--custom-text-color", adjustTextColorBrightness(preferences.textColor, textBrightness));
     } else {
       document.body.style.removeProperty("--custom-text-color");
+    }
+
+    if (preferences.textContrast === "off") {
+      delete document.body.dataset.textContrastTone;
+      clearLocalTextContrastTones();
+    } else if (preferences.textContrastMethod === "sample") {
+      clearLocalTextContrastTones();
+    } else if (preferences.textContrastMethod === "enhance") {
+      delete document.body.dataset.textContrastTone;
     }
 
     scheduleTextContrastTone();
@@ -516,6 +943,13 @@
       const isActive = preferences.textColorMode === "default";
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    root.querySelectorAll("[data-text-shadow-toggle]").forEach((button) => {
+      const isActive = preferences.textShadow !== "off";
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      button.textContent = `阴影:${preferences.textShadow === "enhance" ? "柔光" : preferences.textShadow === "on" ? "开" : "关"}`;
     });
 
     root.querySelectorAll("[data-text-bold-toggle]").forEach((button) => {
@@ -597,6 +1031,18 @@
     updateControls(root);
   };
 
+  const toggleTextShadow = (root) => {
+    const nextShadow = preferences.textShadow === "off" ? "on" : preferences.textShadow === "on" ? "enhance" : "off";
+
+    preferences = {
+      ...preferences,
+      textShadow: nextShadow
+    };
+    applyPreferences();
+    writePreferences(preferences);
+    updateControls(root);
+  };
+
   const toggleTextBold = (root) => {
     preferences = {
       ...preferences,
@@ -612,6 +1058,8 @@
     const title = document.createElement("span");
     const actionRow = document.createElement("div");
     const defaultButton = document.createElement("button");
+    const actionButtons = document.createElement("div");
+    const shadowButton = document.createElement("button");
     const boldButton = document.createElement("button");
     const palette = document.createElement("div");
     const inputRow = document.createElement("div");
@@ -623,12 +1071,20 @@
     title.className = "preference-label";
     title.textContent = labels.textColor;
     actionRow.className = "text-color-action-row";
+    actionButtons.className = "text-color-actions";
     defaultButton.type = "button";
     defaultButton.className = "text-color-default";
     defaultButton.dataset.textColorDefault = "true";
     defaultButton.textContent = "跟随配色";
     defaultButton.setAttribute("aria-pressed", "false");
     defaultButton.addEventListener("click", () => setDefaultTextColor(root));
+    shadowButton.type = "button";
+    shadowButton.className = "text-shadow-toggle";
+    shadowButton.dataset.textShadowToggle = "true";
+    shadowButton.textContent = "阴影:关";
+    shadowButton.setAttribute("aria-label", "字体阴影");
+    shadowButton.setAttribute("aria-pressed", "false");
+    shadowButton.addEventListener("click", () => toggleTextShadow(root));
     boldButton.type = "button";
     boldButton.className = "text-bold-toggle";
     boldButton.dataset.textBoldToggle = "true";
@@ -690,7 +1146,8 @@
       commitInputColor();
     });
 
-    actionRow.append(defaultButton, boldButton);
+    actionButtons.append(shadowButton, boldButton);
+    actionRow.append(defaultButton, actionButtons);
     inputRow.append(preview, input);
     wrapper.append(title, actionRow, palette, inputRow);
     return wrapper;
@@ -715,7 +1172,7 @@
     value.dataset.preferenceValue = group;
     actions.append(value);
 
-    if (group === "textBrightness" || group === "cardBrightness") {
+    if (group === "textBrightness" || group === "cardBrightness" || group === "cardOpacity") {
       const reset = document.createElement("button");
 
       reset.type = "button";
@@ -956,6 +1413,13 @@
     attributes: true,
     attributeFilter: ["style"]
   });
+  new MutationObserver(scheduleTextContrastTone).observe(document.body, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ["hidden"]
+  });
+  window.addEventListener("resize", scheduleTextContrastTone);
+  window.addEventListener("scroll", scheduleTextContrastTone, { passive: true });
 
   applyPreferences();
   renderPreferencePanel();
