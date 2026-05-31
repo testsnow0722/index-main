@@ -724,14 +724,13 @@
   const createAdvancedPreferenceGroup = (root) => {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
-    const title = document.createElement("span");
     const indicator = document.createElement("span");
     const content = document.createElement("div");
 
     details.className = "preference-advanced";
     summary.className = "preference-advanced-summary";
-    title.className = "preference-advanced-title";
-    title.textContent = "高级设置";
+    summary.setAttribute("aria-label", "高级设置");
+    summary.title = "高级设置";
     indicator.className = "preference-advanced-indicator";
     indicator.setAttribute("aria-hidden", "true");
     content.className = "preference-advanced-content";
@@ -740,7 +739,7 @@
       content.append(createPreferenceGroup(group, root));
     });
 
-    summary.append(title, indicator);
+    summary.append(indicator);
     details.append(summary, content);
     return details;
   };

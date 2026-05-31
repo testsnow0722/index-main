@@ -713,20 +713,17 @@ input::-webkit-input-placeholder {
   margin-top: 10px;
 }
 .preference-advanced {
-  margin-top: 12px;
-  padding-top: 10px;
+  margin-top: 8px;
+  padding-top: 4px;
   border-top: 1px solid var(--control-border);
 }
 .preference-advanced-summary {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 32px;
+  justify-content: center;
+  min-height: 20px;
   color: var(--header-text);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
   list-style: none;
 }
 .preference-advanced-summary::-webkit-details-marker {
@@ -740,19 +737,23 @@ input::-webkit-input-placeholder {
   outline-offset: 2px;
 }
 .preference-advanced-indicator {
-  width: 8px;
-  height: 8px;
-  margin-right: 4px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 0.18s ease;
+  width: 0;
+  height: 0;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  opacity: 0.72;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.preference-advanced-summary:hover .preference-advanced-indicator,
+.preference-advanced-summary:focus-visible .preference-advanced-indicator {
+  opacity: 1;
 }
 .preference-advanced[open] .preference-advanced-indicator {
-  transform: rotate(225deg);
+  transform: rotate(180deg);
 }
 .preference-advanced-content {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .preference-label {
   display: block;
