@@ -1500,6 +1500,12 @@ body.site-page[data-surface="liquid-lite"] .segmented-control  {
   -webkit-backdrop-filter: var(--surface-blur);
 }
 
+body.site-page[data-surface="liquid"] .preference-panel,
+body.site-page[data-surface="liquid-lite"] .preference-panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 /* 给原本 static 的容器额外设 relative，让 ::before/::after 能以自身为锚。
    .search-engine / .preference-panel 保留原本的 absolute 浮窗定位，不在此列。 */
 body.site-page[data-surface="liquid"] .nav-item,
