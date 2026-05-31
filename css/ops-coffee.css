@@ -313,12 +313,11 @@ aside#sidebar a.button {
   font-weight: 500;
   font-family: "Microsoft YaHei", "思源黑体", "Arial", sans-serif;
   letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+  transition: color 0.2s ease, opacity 0.2s ease;
 }
 .header-menu a:hover {
   color: #9ddcff;
   opacity: 0.85;
-  transform: translateY(-1px);
 }
 .header-menu li.current-menu-item a {
   font-weight: 700;
@@ -1328,8 +1327,10 @@ body.site-page[data-surface="liquid-lite"] .segmented-control::after {
 body.site-page .header {
   background: var(--header-bg);
   border-bottom: 1px solid var(--header-border);
-  backdrop-filter: var(--surface-blur);
-  -webkit-backdrop-filter: var(--surface-blur);
+  /* Fixed backdrop-filter layers can invalidate card sampling when the pointer
+     leaves the top bar in Chromium, causing a one-frame horizontal flash. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: 0 1px 0 var(--surface-rim), 0 12px 28px rgba(15, 23, 42, 0.08);
   isolation: isolate;
   z-index: 20;
