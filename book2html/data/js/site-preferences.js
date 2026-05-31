@@ -11,7 +11,8 @@
     textContrastMethod: "blend",
     textColorMode: "default",
     textColor: "#2563eb",
-    textBrightness: 0
+    textBrightness: 0,
+    textBold: "off"
   };
 
   const options = {
@@ -235,7 +236,8 @@
         textContrastMethod: getOptionValue("textContrastMethod", saved.textContrastMethod, defaults.textContrastMethod),
         textColorMode: saved.textColorMode === "custom" ? "custom" : defaults.textColorMode,
         textColor: normalizeTextColor(saved.textColor),
-        textBrightness: normalizeTextBrightness(saved.textBrightness)
+        textBrightness: normalizeTextBrightness(saved.textBrightness),
+        textBold: saved.textBold === "on" ? "on" : defaults.textBold
       };
     } catch {
       return { ...defaults };
@@ -453,6 +455,7 @@
     document.body.dataset.textContrastMethod = preferences.textContrastMethod;
     document.body.dataset.textColorMode = preferences.textColorMode;
     document.body.dataset.textBrightness = useTextBrightness ? "custom" : "off";
+    document.body.dataset.textBold = preferences.textBold;
     document.body.style.setProperty("--site-background-blur", `${formatBackgroundBlur(preferences.backgroundBlur)}px`);
     document.body.style.setProperty("--site-background-scale", String(1 + Math.min(preferences.backgroundBlur * 0.0045, 0.08)));
 
@@ -511,6 +514,12 @@
 
     root.querySelectorAll("[data-text-color-default]").forEach((button) => {
       const isActive = preferences.textColorMode === "default";
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    root.querySelectorAll("[data-text-bold-toggle]").forEach((button) => {
+      const isActive = preferences.textBold === "on";
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", String(isActive));
     });
@@ -588,10 +597,22 @@
     updateControls(root);
   };
 
+  const toggleTextBold = (root) => {
+    preferences = {
+      ...preferences,
+      textBold: preferences.textBold === "on" ? "off" : "on"
+    };
+    applyPreferences();
+    writePreferences(preferences);
+    updateControls(root);
+  };
+
   const createTextColorPreferenceGroup = (root) => {
     const wrapper = document.createElement("div");
     const title = document.createElement("span");
+    const actionRow = document.createElement("div");
     const defaultButton = document.createElement("button");
+    const boldButton = document.createElement("button");
     const palette = document.createElement("div");
     const inputRow = document.createElement("div");
     const preview = document.createElement("span");
@@ -601,12 +622,20 @@
     wrapper.dataset.preferenceGroup = "textColor";
     title.className = "preference-label";
     title.textContent = labels.textColor;
+    actionRow.className = "text-color-action-row";
     defaultButton.type = "button";
     defaultButton.className = "text-color-default";
     defaultButton.dataset.textColorDefault = "true";
     defaultButton.textContent = "跟随配色";
     defaultButton.setAttribute("aria-pressed", "false");
     defaultButton.addEventListener("click", () => setDefaultTextColor(root));
+    boldButton.type = "button";
+    boldButton.className = "text-bold-toggle";
+    boldButton.dataset.textBoldToggle = "true";
+    boldButton.textContent = "加粗";
+    boldButton.setAttribute("aria-label", "文字加粗");
+    boldButton.setAttribute("aria-pressed", "false");
+    boldButton.addEventListener("click", () => toggleTextBold(root));
 
     palette.className = "text-color-palette";
     palette.setAttribute("role", "group");
@@ -661,8 +690,9 @@
       commitInputColor();
     });
 
+    actionRow.append(defaultButton, boldButton);
     inputRow.append(preview, input);
-    wrapper.append(title, defaultButton, palette, inputRow);
+    wrapper.append(title, actionRow, palette, inputRow);
     return wrapper;
   };
 
