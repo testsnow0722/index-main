@@ -14,7 +14,7 @@
 - `js/background-loader.js`：异步加载背景图。
 - `css/ops-coffee.css`：基础样式、主题与质感定义。
 - `images/paper-texture.png`：磨砂纸质感的纸纹叠加层。
-- `book2html/`：本地网页界面的收藏夹导出工具。
+- `book2html/`：本地网页界面的收藏夹导出工具，可复用本站资源生成同风格导航页，也可用 `data/` 资源独立运行。
 - `scripts/check-project.ps1`：项目自检脚本。
 - `scripts/export-chrome-bookmarks.ps1`：命令行版收藏夹导出工具。
 - `scripts/format-site-data.js`：一次性把 `site-data.js` 重排为标准 2 空格缩进的工具。
@@ -44,6 +44,12 @@ powershell -ExecutionPolicy Bypass -File .\book2html-server.ps1
 ```
 
 页面会自动扫描 Chromium 系浏览器的 `Bookmarks` 文件，右侧按层级浏览收藏夹，勾选一个收藏夹后生成根目录下的 `bookmarks_收藏夹名称.html`。
+
+补充说明：
+
+- 主项目仓库：<https://github.com/testsnow0722/index-main>
+- `Book2HTML` 独立仓库：<https://github.com/testsnow0722/Bookmarks-to-html>
+- 更完整的关系、依赖和运行说明见 [book2html/README.md](book2html/README.md)。
 
 也可以继续使用命令行版：
 
