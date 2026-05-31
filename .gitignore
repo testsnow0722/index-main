@@ -1,0 +1,16 @@
+.vscode/
+
+# Local screenshots and one-off visual test files.
+QQ*.jpg
+section-title-style-lab.html
+develop-section-title-test.html
+css/ops-coffee.backup-before-section-title-test.css
+css/ops-coffee.section-title-test.css
+
+# Generated bookmark exports and runtime snapshots may contain personal data.
+bookmarks_*.html
+snapshots/bookmarks/
+book2html/snapshots/
+
+# Unused local background copy.
+images/beijin1g.jpg

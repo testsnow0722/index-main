@@ -1,215 +1,104 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
   <meta name="applicable-device" content="pc,mobile">
-  <meta name="keywords" content="个人导航" />
-  <meta name="description" content="个人自用windows平台下的导航" />
-  <link rel="stylesheet" href="css/ops-coffee.min.css" type="text/css" />
-  <link rel="stylesheet" href="css/custom-theme.css" type="text/css" />
-  <link rel="shortcut icon" href="images/favicon.ico" />
-
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158772988-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'UA-158772988-1');
-  </script>
-<!-- 自定义样式在 css/custom-theme.css 中维护 -->
-
-
-
-
+  <meta name="keywords" content="个人导航">
+  <meta name="description" content="个人自用 Windows 平台下的导航">
+  <title>首页 - 个人导航</title>
+  <link rel="stylesheet" href="css/ops-coffee.css" type="text/css">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="preload" as="image" href="images/beijing.jpg">
+  <link rel="dns-prefetch" href="//www.baidu.com">
+  <link rel="preconnect" href="https://www.baidu.com" crossorigin>
+  <link rel="dns-prefetch" href="//www.google.com">
+  <link rel="preconnect" href="https://www.google.com" crossorigin>
+  <link rel="dns-prefetch" href="//www.bilibili.com">
+  <link rel="preconnect" href="https://www.bilibili.com" crossorigin>
 </head>
-<body data-rsssl="1">
-  <div class="settings" id="page-settings">
-    <button id="settings-toggle" class="settings-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="settings-panel">
-      <span class="settings-toggle__icon" aria-hidden="true">⚙️</span>
-      <span class="settings-toggle__text">设置</span>
-      <span class="settings-toggle__theme" id="settings-toggle-theme" aria-hidden="true">☀️</span>
-    </button>
-    <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="false" aria-labelledby="settings-title" aria-hidden="true">
-      <div class="settings-panel__header">
-        <h2 id="settings-title">显示设置</h2>
-        <button type="button" id="settings-close" class="settings-close" aria-label="关闭设置">✕</button>
-      </div>
-      <div class="settings-section">
-        <div class="settings-item">
-          <div class="settings-item__label">
-            <strong>主题模式</strong>
-            <span>选择喜欢的明暗风格</span>
-          </div>
-          <div class="theme-mode-group" role="group" aria-label="主题模式">
-            <button type="button" class="theme-mode-button" data-theme-value="light" aria-pressed="false">浅色</button>
-            <button type="button" class="theme-mode-button" data-theme-value="dark" aria-pressed="false">深色</button>
-            <button type="button" class="theme-mode-button" data-theme-value="system" aria-pressed="false">跟随系统</button>
-          </div>
-        </div>
-        <span class="settings-hint" id="theme-state">当前：浅色模式</span>
-      </div>
-      <div class="settings-section">
-        <div class="settings-item">
-          <div class="settings-item__label">
-            <strong>图标包裹宽度</strong>
-            <span>自定义导航图标的宽度</span>
-          </div>
-          <div class="range-control">
-            <input type="range" id="icon-width-control" min="32" max="96" step="1" value="48" aria-describedby="icon-width-value" />
-            <output id="icon-width-value" for="icon-width-control">48 px</output>
-          </div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item__label">
-            <strong>图标包裹高度</strong>
-            <span>自定义导航图标的高度</span>
-          </div>
-          <div class="range-control">
-            <input type="range" id="icon-height-control" min="32" max="96" step="1" value="48" aria-describedby="icon-height-value" />
-            <output id="icon-height-value" for="icon-height-control">48 px</output>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="header">
-    <div class="container">
-      <nav class="header-menu">
-        <ul >
-          <li class="current-menu-item"><a href="index.html">首页</a></li>
-          <li class=""><a href="common.html">常用</a></li>
-          <li class=""><a href="develop.html">开发</a></li>
-          <li class=""><a href="tools.html">工具</a></li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-  <!-- header -->
+<body class="site-page" data-page="home">
+  <div class="header" data-site-header></div>
 
-  <div id="content-wrapper">
+  <main id="content-wrapper">
     <div class="container">
-
-      <section class="sousuo">
+      <section class="sousuo search-section" aria-label="搜索">
         <div class="search">
           <div class="search-box">
-            <button class="search-engine-toggle" id="search-engine-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="search-engine">
+            <button
+              class="search-engine-toggle"
+              id="search-engine-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="search-engine-panel"
+            >
               <img class="search-icon" src="" alt="">
-              <span class="sr-only">切换搜索引擎</span>
             </button>
-            <input type="text" id="txt" class="search-input" placeholder="选择搜索引擎后输入关键字" autocomplete="off">
-            <button class="search-btn" id="search-btn" type="button" aria-label="执行搜索">
-              <img src="images/sou0.png" alt="搜索">
+            <label class="sr-only" for="txt">搜索关键词</label>
+            <input
+              type="search"
+              id="txt"
+              class="search-input"
+              placeholder="输入关键词搜索"
+              autocomplete="off"
+            >
+            <button class="search-btn" id="search-btn" type="button" aria-label="搜索">
+              <img src="images/sou0.png" alt="">
             </button>
           </div>
-          <div class="search-engine" id="search-engine" role="listbox" aria-label="搜索引擎列表">
-            <ul class="search-engine-list" id="search-engine-list"></ul>
+          <div class="search-engine" id="search-engine-panel" hidden>
+            <ul class="search-engine-list" aria-label="搜索引擎列表"></ul>
           </div>
         </div>
       </section>
 
-      <div class="nav-cell clearfix">
-        <ul class="nav-list">
-          <li>
-            <a class="nav-item clearfix" href="https://www.bilibili.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/rhub.ico);">
-              </div>
-              <div class="nav-name">bilibili</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://space.bilibili.com/3186284/favlist?fid=2270761184&ftype=create/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/rhub.ico);">
-              </div>
-              <div class="nav-name">稍后再看</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://bangumi.tv/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/bang.ico);">
-              </div>
-              <div class="nav-name">Bangumi</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.zhihu.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/zhih.png);">
-              </div>
-              <div class="nav-name">知乎</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.weibo.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/weib.png);">
-              </div>
-              <div class="nav-name">微博</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.douban.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/doub.png);">
-              </div>
-              <div class="nav-name">豆瓣</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.taobao.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/tb38.png);">
-              </div>
-              <div class="nav-name">淘宝</div>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.jd.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/jd37.png);">
-              </div>
-              <div class="nav-name">京东</div>
-            </a>
-          </li>
-		  
-          <li>
-            <a class="nav-item clearfix" href="https://tieba.baidu.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/baid.png);">
-              </div>
-              <div class="nav-name">贴吧</div>
-            </a>
-          </li>
-		  
-          <li>
-            <a class="nav-item clearfix" href="https://www.ithome.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/itho.ico);">
-              </div>
-              <div class="nav-name">IT之家</div>
-            </a>
-          </li>
-        </ul>
-      </div>
+      <div data-nav-page="home"></div>
     </div>
-  </div>
+  </main>
 
-  <script src="js/theme-settings.js" defer></script>
-  <script src="js/site.js" defer></script>
+  <script src="js/site-shell.js"></script>
+  <script data-book2html-nav>
+    (() => {
+      const pages = [{ href: "bookmarks_对话实例.html", label: "对话实例" }];
+      const list = document.querySelector(".header-menu ul");
+      if (!list) return;
+
+      const currentFile = decodeURIComponent((location.pathname.split("/").pop() || "index.html"));
+      const existingHrefs = new Set([...list.querySelectorAll("a")].map((link) => link.getAttribute("href")));
+
+      pages.forEach((page) => {
+        if (!page.href || !page.label || existingHrefs.has(page.href)) return;
+
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+
+        if (page.href === currentFile) {
+          item.className = "current-menu-item";
+          link.setAttribute("aria-current", "page");
+        }
+
+        link.href = page.href;
+        link.textContent = page.label;
+        item.append(link);
+        list.append(item);
+        existingHrefs.add(page.href);
+      });
+    })();
+  </script>
+
+  <script src="js/site-preferences.js"></script>
+  <script src="js/site-data.js"></script>
+  <script src="js/site-renderer.js"></script>
+  <script src="js/nav.ops-coffee.min.js"></script>
+  <script src="js/liquid-glass.js" defer></script>
+  <script src="js/background-loader.js"></script>
 </body>
 </html>
+
+
+
+
+
+

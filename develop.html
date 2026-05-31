@@ -1,378 +1,67 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <meta http-equiv="Cache-Control" content="no-transform" />
-  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
   <meta name="applicable-device" content="pc,mobile">
-  <meta name="keywords" content="个人导航" />
-  <meta name="description" content="个人自用windows平台下的导航" />
-  <link rel="stylesheet" href="css/ops-coffee.min.css" type="text/css" />
-  <link rel="stylesheet" href="css/custom-theme.css" type="text/css" />
-  <link rel="shortcut icon" href="images/favicon.ico" />
-
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158772988-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'UA-158772988-1');
-  </script>
+  <meta name="keywords" content="个人导航">
+  <meta name="description" content="个人自用 Windows 平台下的导航">
+  <title>开发 - 个人导航</title>
+  <link rel="stylesheet" href="css/ops-coffee.css" type="text/css">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="preload" as="image" href="images/beijing.jpg">
 </head>
+<body class="site-page" data-page="develop">
+  <div class="header" data-site-header></div>
 
-<body data-rsssl="1">
-  <div class="settings" id="page-settings">
-    <button id="settings-toggle" class="settings-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="settings-panel">
-      <span class="settings-toggle__icon" aria-hidden="true">⚙️</span>
-      <span class="settings-toggle__text">设置</span>
-      <span class="settings-toggle__theme" id="settings-toggle-theme" aria-hidden="true">☀️</span>
-    </button>
-    <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="false" aria-labelledby="settings-title" aria-hidden="true">
-      <div class="settings-panel__header">
-        <h2 id="settings-title">显示设置</h2>
-        <button type="button" id="settings-close" class="settings-close" aria-label="关闭设置">✕</button>
-      </div>
-      <div class="settings-section">
-        <div class="settings-item">
-          <div class="settings-item__label">
-            <strong>主题模式</strong>
-            <span>选择喜欢的明暗风格</span>
-          </div>
-          <div class="theme-mode-group" role="group" aria-label="主题模式">
-            <button type="button" class="theme-mode-button" data-theme-value="light" aria-pressed="false">浅色</button>
-            <button type="button" class="theme-mode-button" data-theme-value="dark" aria-pressed="false">深色</button>
-            <button type="button" class="theme-mode-button" data-theme-value="system" aria-pressed="false">跟随系统</button>
-          </div>
-        </div>
-        <span class="settings-hint" id="theme-state">当前：浅色模式</span>
-      </div>
-      <div class="settings-section">
-        <div class="settings-item">
-          <div class="settings-item__label">
-            <strong>图标包裹宽度</strong>
-            <span>自定义导航图标的宽度</span>
-          </div>
-          <div class="range-control">
-            <input type="range" id="icon-width-control" min="32" max="96" step="1" value="48" aria-describedby="icon-width-value" />
-            <output id="icon-width-value" for="icon-width-control">48 px</output>
-          </div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item__label">
-            <strong>图标包裹高度</strong>
-            <span>自定义导航图标的高度</span>
-          </div>
-          <div class="range-control">
-            <input type="range" id="icon-height-control" min="32" max="96" step="1" value="48" aria-describedby="icon-height-value" />
-            <output id="icon-height-value" for="icon-height-control">48 px</output>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="header">
+  <main id="content-wrapper">
     <div class="container">
-      <nav class="header-menu">
-        <ul>
-          <li class=""><a href="index.html">首页</a></li>
-          <li class=""><a href="common.html">常用</a></li>
-          <li class="current-menu-item"><a href="develop.html">开发</a></li>
-          <li class=""><a href="tools.html">工具</a></li>
-        </ul>
-      </nav>
+      <div data-nav-page="develop"></div>
     </div>
-  </div>
-  <!-- header -->
+  </main>
 
-  <div id="content-wrapper">
-    <div class="container">
-      <div class="nav-cell clearfix">
-		<a class="nav-item clearfix" style="padding-top: 5px; padding-bottom: 5px;">
-			<h2 style="margin-top: 5px;"> 🥇 技术社区
-			<!-- <a class="more" href="">更多</a> -->
-			</h2>
-		</a>
-        <ul class="nav-list">
-          <li>
-            <a class="nav-item clearfix" href="https://www.v2ex.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/v2ex.png);">
-              </div>
-              <div class="nav-name">V2EX</div>
-              <p>创意工作者的社区</p>
-            </a>
-          </li>
+  <script src="js/site-shell.js"></script>
+  <script data-book2html-nav>
+    (() => {
+      const pages = [{ href: "bookmarks_对话实例.html", label: "对话实例" }];
+      const list = document.querySelector(".header-menu ul");
+      if (!list) return;
 
-          <li>
-            <a class="nav-item clearfix" href="https://juejin.im/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/xitu.png);">
-              </div>
-              <div class="nav-name">掘金</div>
-              <p>帮助开发者成长的社区</p>
-            </a>
-          </li>
+      const currentFile = decodeURIComponent((location.pathname.split("/").pop() || "index.html"));
+      const existingHrefs = new Set([...list.querySelectorAll("a")].map((link) => link.getAttribute("href")));
 
-          <li>
-            <a class="nav-item clearfix" href="https://www.cnblogs.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/cnb6.png);">
-              </div>
-              <div class="nav-name">博客园</div>
-              <p>开发者的网上家园</p>
-            </a>
-          </li>
+      pages.forEach((page) => {
+        if (!page.href || !page.label || existingHrefs.has(page.href)) return;
 
-          <li>
-            <a class="nav-item clearfix" href="https://www.oschina.net/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/osc2.png);">
-              </div>
-              <div class="nav-name">开源中国</div>
-              <p>中文开源技术交流社区</p>
-            </a>
-          </li>
+        const item = document.createElement("li");
+        const link = document.createElement("a");
 
-          <li>
-            <a class="nav-item clearfix" href="https://www.csdn.net/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/csdn.png);">
-              </div>
-              <div class="nav-name">CSDN</div>
-              <p>专业IT技术社区</p>
-            </a>
-          </li>
+        if (page.href === currentFile) {
+          item.className = "current-menu-item";
+          link.setAttribute("aria-current", "page");
+        }
 
-          <li>
-            <a class="nav-item clearfix" href="https://segmentfault.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/sef4.png);">
-              </div>
-              <div class="nav-name">SegmentFault</div>
-              <p>思否社区，学习技能、解决问题</p>
-            </a>
-          </li>
+        link.href = page.href;
+        link.textContent = page.label;
+        item.append(link);
+        list.append(item);
+        existingHrefs.add(page.href);
+      });
+    })();
+  </script>
 
-          <li>
-            <a class="nav-item clearfix" href="https://toutiao.io/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/k8a9.png);">
-              </div>
-              <div class="nav-name">开发者头条</div>
-              <p>程序员分享平台</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://cnodejs.org/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/cnd5.png);">
-              </div>
-              <div class="nav-name">CNODE</div>
-              <p>NodeJS专业中文社区</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://stackoverflow.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/sof4.png);">
-              </div>
-              <div class="nav-name">StackOverflow</div>
-              <p>全球知名的技术问答社区</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://news.ycombinator.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/hcnw.png);">
-              </div>
-              <div class="nav-name">Hacker News</div>
-              <p>全球知名的黑客极客社区</p>
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="nav-cell clearfix">
-
-		<a class="nav-item clearfix" style="padding-top: 5px; padding-bottom: 5px;">
-			<h2 style="margin-top: 5px;"> ‍💻 前端学习
-			<!-- <a class="more" href="">更多</a> -->
-			</h2>
-		</a>
-        <ul class="nav-list">
-
-          <li>
-            <a class="nav-item clearfix" href="https://cn.vuejs.org/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/vuej.png);">
-              </div>
-              <div class="nav-name">Vuejs</div>
-              <p>国人开发的流行JavaScript框架</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://zh-hans.reactjs.org/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/reac.png);">
-              </div>
-              <div class="nav-name">React</div>
-              <p>Facebook开源的强大的JavaScript框架</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://angular.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/angu.png);">
-              </div>
-              <div class="nav-name">Angularjs</div>
-              <p>Google基于TypeScript的开源Web应用程序框架</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://flutterchina.club/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/flut.png);">
-              </div>
-              <div class="nav-name">Flutter</div>
-              <p>Google开发的移动端跨平台工具包</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.w3school.com.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/w3sg.png);">
-              </div>
-              <div class="nav-name">W3School</div>
-              <p>全面的网站建设教程，包含HTML、JS、CSS、SQL等等</p>
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="nav-cell clearfix">
-		<a class="nav-item clearfix" style="padding-top: 5px; padding-bottom: 5px;">
-			<h2 style="margin-top: 5px;">💻 界面设计
-			<!-- <a class="more" href="">更多</a> -->
-			</h2>
-		</a>
-        <ul class="nav-list">
-          <li>
-            <a class="nav-item clearfix" href="https://www.iconfont.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/zcft.png);">
-              </div>
-              <div class="nav-name">Iconfont</div>
-              <p>国内功能强大且图标众多的免费矢量图标库</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="http://www.fontawesome.com.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/f72d.png);">
-              </div>
-              <div class="nav-name">FontAwesome</div>
-              <p>可以在网页中引入的icon图标站</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="http://www.qiuziti.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/536e.png);">
-              </div>
-              <div class="nav-name">求字体</div>
-              <p>免费的中文字体识别网站</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.myfonts.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/9566.png);">
-              </div>
-              <div class="nav-name">myFonts</div>
-              <p>免费的英文字体识别网站</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.logaster.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/e46c.png);">
-              </div>
-              <div class="nav-name">Logaster</div>
-              <p>简单免费的中文在线Logo制作工具</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://looka.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/c7ac.png);">
-              </div>
-              <div class="nav-name">Looka</div>
-              <p>利用人工智能和机器学习来生成Logo</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://colors.ichuantong.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/cs64.png);">
-              </div>
-              <div class="nav-name">苍色</div>
-              <p>中国传统颜色手册</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="http://zhongguose.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/845e.png);">
-              </div>
-              <div class="nav-name">中国色</div>
-              <p>中国传统颜色</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://huaban.com/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/hban.png);">
-              </div>
-              <div class="nav-name">花瓣</div>
-              <p>灵感找寻网站，大量的素材</p>
-            </a>
-          </li>
-
-          <li>
-            <a class="nav-item clearfix" href="https://www.zcool.com.cn/" target="_blank">
-              <div class="nav-img"
-                style="background-image: url(images/zaku.png);">
-              </div>
-              <div class="nav-name">站酷</div>
-              <p>中国人气设计师互动平台</p>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <script src="js/theme-settings.js" defer></script>
-  <script src="js/site.js" defer></script>
+  <script src="js/site-preferences.js"></script>
+  <script src="js/site-data.js"></script>
+  <script src="js/site-renderer.js"></script>
+  <script src="js/liquid-glass.js" defer></script>
+  <script src="js/background-loader.js"></script>
 </body>
-
 </html>
+
+
+
+
+
+
