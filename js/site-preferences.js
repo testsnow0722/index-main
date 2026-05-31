@@ -98,7 +98,7 @@
     cardBrightness: "卡片明暗度",
     textColor: "文字主题色",
     textBrightness: "文字明暗度",
-    textContrast: "反色范围",
+    textContrast: "文字反色",
     textContrastMethod: "实现方式"
   };
 
@@ -692,8 +692,8 @@
       reset.className = "preference-reset";
       reset.dataset.preferenceGroup = group;
       reset.dataset.preferenceReset = group;
-      reset.textContent = "0%";
-      reset.setAttribute("aria-label", `${labels[group]}恢复为 0%`);
+      reset.textContent = "默认";
+      reset.setAttribute("aria-label", `${labels[group]}恢复默认`);
       reset.addEventListener("click", () => setPreference(group, defaults[group], root));
 
       if (group === "textBrightness") {
@@ -818,14 +818,25 @@
     const panel = document.createElement("div");
     const panelId = "site-preference-panel";
 
-    const syncPanelBackdrop = () => {
+    const syncPanelPosition = () => {
       if (panel.hidden) {
+        panel.style.removeProperty("left");
+        panel.style.removeProperty("top");
         backdrop.style.removeProperty("left");
         backdrop.style.removeProperty("top");
         backdrop.style.removeProperty("width");
         backdrop.style.removeProperty("height");
         return;
       }
+
+      const toggleRect = toggle.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const margin = 12;
+      const left = Math.max(margin, Math.min(window.innerWidth - panelRect.width - margin, toggleRect.right - panelRect.width));
+      const top = Math.max(margin, Math.min(window.innerHeight - panelRect.height - margin, toggleRect.bottom + 5));
+
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
 
       const rect = panel.getBoundingClientRect();
       backdrop.style.left = `${rect.left}px`;
@@ -842,9 +853,10 @@
       toggle.setAttribute("aria-expanded", String(isOpen));
 
       if (isOpen) {
-        window.requestAnimationFrame(syncPanelBackdrop);
+        syncPanelPosition();
+        window.requestAnimationFrame(syncPanelPosition);
       } else {
-        syncPanelBackdrop();
+        syncPanelPosition();
       }
     };
 
@@ -870,7 +882,7 @@
     const advanced = createAdvancedPreferenceGroup(panel);
     panel.append(advanced);
     advanced.addEventListener("toggle", () => {
-      window.requestAnimationFrame(syncPanelBackdrop);
+      window.requestAnimationFrame(syncPanelPosition);
     });
 
     toggle.addEventListener("click", () => {
@@ -878,7 +890,7 @@
     });
 
     document.addEventListener("click", (event) => {
-      if (root.contains(event.target)) {
+      if (root.contains(event.target) || panel.contains(event.target)) {
         return;
       }
 
@@ -896,7 +908,7 @@
 
     window.addEventListener("resize", () => {
       if (!panel.hidden) {
-        syncPanelBackdrop();
+        syncPanelPosition();
       }
     });
 
@@ -904,9 +916,9 @@
       setPanelOpen(false);
     });
 
-    root.append(toggle, panel);
+    root.append(toggle);
     headerContainer.append(root);
-    document.body.append(backdrop);
+    document.body.append(backdrop, panel);
     updateControls(panel);
   };
 

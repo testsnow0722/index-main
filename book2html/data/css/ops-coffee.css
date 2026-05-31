@@ -674,18 +674,16 @@ input::-webkit-input-placeholder {
   z-index: 21;
   border-radius: 10px;
   background: transparent;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  animation: preference-backdrop-in 0.16s ease;
+  pointer-events: none;
 }
 .preference-backdrop[hidden] {
   display: none !important;
 }
 
 .preference-panel {
-  position: absolute;
+  position: fixed;
   top: 48px;
-  right: 0;
+  right: auto;
   z-index: 32;
   width: min(340px, calc(100vw - 24px));
   max-height: min(84vh, 760px);
@@ -698,15 +696,6 @@ input::-webkit-input-placeholder {
 }
 .preference-panel[hidden] {
   display: none !important;
-}
-
-@keyframes preference-backdrop-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .preference-group + .preference-group {
@@ -1613,9 +1602,8 @@ html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"][d
   background: rgba(15, 23, 42, 0.14);
 }
 
-/* preference-panel 在 .header 内部，header 自己也有 backdrop-filter，
-   嵌套的 backdrop-filter 在 Chromium 上不会重新对 header 之外的真实背景采样。
-   只对 panel 加这个绕过；search-engine 不在 header 里，不需要。 */
+/* preference-panel 已挂到 body 下；仍保留独立合成层，避免 Chromium 在
+   打开设置并离开顶栏时对液态玻璃面板重采样出现瞬时横向闪烁。 */
 html[data-liquid-glass-supported="true"] body.site-page[data-surface="liquid"] .preference-panel {
   will-change: backdrop-filter;
   transform: translateZ(0);
@@ -1857,7 +1845,6 @@ body.site-page[data-density="compact"] .nav-item.has-description .nav-img {
   }
   .preference-panel {
     top: 40px;
-    right: 0;
     width: min(320px, 88vw);
   }
 
